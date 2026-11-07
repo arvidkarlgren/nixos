@@ -48,6 +48,9 @@
   time.timeZone = "Europe/Stockholm";
   i18n.defaultLocale = "en_US.UTF-8";
 
+  console.keyMap = "sv-latin1";
+  services.xserver.xkb.layout = "se";
+
   # Set to the release used for this initial installation.
   system.stateVersion = "26.05";
 }
