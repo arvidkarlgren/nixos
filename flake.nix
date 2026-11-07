@@ -1,6 +1,5 @@
 {
-  description = "NixOS COSMIC desktop configuration";
-
+  description = "Multi-host NixOS configuration";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     disko = {
@@ -8,15 +7,20 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-
-  outputs = { self, nixpkgs, disko, ... }: {
-    nixosConfigurations.desktop = nixpkgs.lib.nixosSystem {
+  outputs = { nixpkgs, disko, ... }:
+    let
       system = "x86_64-linux";
-      modules = [
-        disko.nixosModules.disko
-        ./hosts/desktop/disko.nix
-        ./hosts/desktop/configuration.nix
-      ];
+      mkHost = host: nixpkgs.lib.nixosSystem {
+        inherit system;
+        modules = [
+          disko.nixosModules.disko
+          (./hosts + "/${host}/default.nix")
+        ];
+      };
+    in {
+      nixosConfigurations = {
+        desktop = mkHost "desktop";
+        laptop = mkHost "laptop";
+      };
     };
-  };
 }

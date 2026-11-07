@@ -1,73 +1,51 @@
-# NixOS COSMIC configuration
+# Multi-host NixOS configuration
 
-This repository defines a `desktop` host for x86_64 UEFI systems, using
-COSMIC, Btrfs, Disko, Git, SSH, and xrdp.
+A shared baseline for `desktop` and `laptop`, with host-specific additions.
 
-## Before installing
+## Layout
 
-1. Boot the NixOS installer in UEFI mode.
-2. Obtain this repository in the live environment.
-3. Edit `hosts/desktop/disko.nix` and replace
-   `REPLACE_WITH_YOUR_DISK_ID` with the correct whole-disk path from
-   `/dev/disk/by-id/`.
-4. Verify the disk ID carefully. The install script destroys and repartitions
-   the selected disk.
+- `flake.nix`: defines the hosts and assembles each system.
+- `common/`: shared NixOS configuration, split by broad area.
+- `hosts/<host>/`: hardware, Disko layout, and host-specific additions.
+- `home/`: reserved for Home Manager and dotfiles; not integrated yet.
+- `secrets/`: reserved for SOPS/age; not integrated yet.
+- `scripts/install.sh`: interactive host/disk installer.
 
-Inspect disk IDs with:
+## Before use
+
+1. Review both Disko files and replace the disk placeholder, or use the installer.
+2. Populate laptop hardware settings from `nixos-generate-config --show-hardware-config`.
+3. Replace the temporary `initialPassword` and review passwordless sudo.
+4. Review whether Sunshine and Steam should be enabled on both hosts.
+5. The current Disko layout is unencrypted Btrfs. LUKS is not implemented.
+6. Home Manager and SOPS/age are not implemented.
+
+## Rebuild
 
 ```bash
-ls -l /dev/disk/by-id/
+sudo nixos-rebuild switch --flake .#desktop
+sudo nixos-rebuild switch --flake .#laptop
 ```
+
+## Initialize Git and lock dependencies
+
+```bash
+git init
+git add .
+nix flake lock
+git add flake.lock
+git commit -m "Initial NixOS configuration"
+```
+
+Commit `flake.lock` to pin dependency revisions.
 
 ## Install
 
-From the repository root:
+Boot the NixOS installer, access this repository, then run:
 
 ```bash
-chmod +x scripts/install.sh
-sudo ./scripts/install.sh desktop
+bash scripts/install.sh
 ```
 
-The host argument selects the flake configuration. Additional hosts need
-entries in `flake.nix` and corresponding directories under `hosts/`.
-
-The script asks for explicit confirmation before running Disko.
-
-## Installed user
-
-The configured user is `arvid`. The initial password is `test`, retained
-from the earlier test configuration. Change it after installation:
-
-```bash
-passwd
-```
-
-The password is configured as a plaintext initial password for testing;
-do not use it as a long-term credential.
-
-## Git repository clone
-
-During system activation, the configuration attempts to clone
-`https://github.com/arvidkarlgren/nixos.git` into `/home/arvid/nixos` if
-that path does not already contain a Git repository. Git is also installed
-as a system package.
-
-## Remote desktop
-
-xrdp is enabled and TCP port 3389 is opened. xrdp normally creates a separate
-X11 session; it does not automatically share the active COSMIC Wayland
-session. A compatible X11 desktop/session setup may be needed for a complete
-remote graphical desktop.
-
-## Storage layout
-
-Disko creates a 1 GiB EFI system partition and a Btrfs partition containing:
-
-- `@` mounted at `/`
-- `@home` mounted at `/home`
-- `@nix` mounted at `/nix`
-- `@log` mounted at `/var/log`
-- `@snapshots` mounted at `/.snapshots`
-- `@swap` mounted at `/.swapvol`
-
-All Btrfs subvolumes share free space in the same filesystem.
+The script formats the selected disk after explicit confirmation. Do not run it
+against a disk containing data you want to keep.
