@@ -29,6 +29,11 @@
   hardware.graphics.enable = true;
   hardware.graphics.enable32Bit = true;
 
+  {
+    services.gnome.gnome-remote-desktop.enable = true;
+    networking.firewall.allowedTCPPorts = [ 3389 ];
+  }
+
   # Test user: change this password after installation.
   users.users.test = {
     isNormalUser = true;
