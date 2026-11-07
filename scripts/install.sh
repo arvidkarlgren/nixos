@@ -5,16 +5,18 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$REPO_DIR"
 
+# Require root
 if [[ $EUID -ne 0 ]]; then
     echo "Run with sudo: sudo ./scripts/install.sh" >&2
     exit 1
 fi
 
-for cmd in lsblk nix nixos-install find sort awk sed mktemp cp python3 readlink; do
-    command -v "$cmd" >/dev/null 2>&1 || {
+# Check required commands
+for cmd in lsblk nix nixos-install find sort awk sed mktemp cp readlink; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
         echo "Required command not found: $cmd" >&2
         exit 1
-    }
+    fi
 done
 
 # Select host
@@ -54,7 +56,7 @@ fi
 
 # Display all disks and their partitions
 echo
-echo "Available disks and their partition/filesystem details:"
+echo "Available disks and partition/filesystem details:"
 echo
 lsblk -e7 -o NAME,PATH,SIZE,TYPE,PTTYPE,FSTYPE,FSVER,LABEL,UUID,MOUNTPOINTS,MODEL,SERIAL
 
@@ -114,21 +116,16 @@ trap cleanup EXIT
 
 cp -a "$REPO_DIR/." "$TMP_REPO/"
 
-python3 - "$TMP_REPO/hosts/$HOST/disko.nix" "$DISK" <<'PY'
-from pathlib import Path
-import sys
+# Replace the Disko placeholder in the temporary copy
+PLACEHOLDER="/dev/disk/by-id/REPLACE_WITH_YOUR_DISK_ID"
+DISKO_CONFIG="$TMP_REPO/hosts/$HOST/disko.nix"
 
-config = Path(sys.argv[1])
-disk = sys.argv[2]
+if ! grep -Fq "$PLACEHOLDER" "$DISKO_CONFIG"; then
+    echo "Disko device placeholder not found in $DISKO_CONFIG"
+    exit 1
+fi
 
-text = config.read_text()
-placeholder = "/dev/disk/by-id/REPLACE_WITH_YOUR_DISK_ID"
-
-if placeholder not in text:
-    raise SystemExit(f"Disko placeholder not found in {config}")
-
-config.write_text(text.replace(placeholder, disk))
-PY
+sed -i "s|$PLACEHOLDER|$DISK|g" "$DISKO_CONFIG"
 
 # Run Disko
 echo
