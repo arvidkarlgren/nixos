@@ -1,13 +1,10 @@
 keys:
   - &main age13jmt98xp7qjcgl9vwgw3yygafacgdnm9pqnpm94q2xraggu7vyks0748p4
+  - &desktop age1mvxf3q9mgxhzr664ep8eryprkwea2d8923ceradmjt86rsnjr37seh0fsg
 
 creation_rules:
   - path_regex: secrets/.*\.yaml$
     key_groups:
       - age:
           - *main
-
-
-
-
-
+          - *desktop
