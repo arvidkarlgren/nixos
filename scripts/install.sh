@@ -12,7 +12,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # Check required commands
-for cmd in lsblk nix nixos-install find sort awk sed mktemp cp readlink; do
+for cmd in lsblk nix nixos-install find sort awk sed mktemp cp readlink grep; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         echo "Required command not found: $cmd" >&2
         exit 1
@@ -127,12 +127,12 @@ fi
 
 sed -i "s|$PLACEHOLDER|$DISK|g" "$DISKO_CONFIG"
 
-# Run Disko
+# Run Disko directly from its own flake
 echo
 echo "==> Partitioning and mounting $DISK..."
 
 nix --extra-experimental-features "nix-command flakes" run \
-    "path:$TMP_REPO#disko" -- \
+    github:nix-community/disko/latest -- \
     --mode destroy,format,mount \
     --flake "$TMP_REPO#$HOST"
 
