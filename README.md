@@ -1,52 +1,68 @@
-# NixOS COSMIC Proxmox test configuration
+# NixOS COSMIC configuration
 
-Minimal NixOS configuration with Flakes, Disko, Btrfs and COSMIC.
+This repository defines a `desktop` host for x86_64 UEFI systems, using
+COSMIC, Btrfs, Disko, Git, SSH, and xrdp.
 
 ## Before installing
 
-1. Configure the Proxmox VM to use OVMF (UEFI).
-2. Add a Proxmox EFI Disk.
-3. Boot the NixOS installer and connect to the network.
-4. Clone this repository (or copy this directory to the installer).
-5. Find the target disk ID:
+1. Boot the NixOS installer in UEFI mode.
+2. Obtain this repository in the live environment.
+3. Edit `hosts/desktop/disko.nix` and replace
+   `REPLACE_WITH_YOUR_DISK_ID` with the correct whole-disk path from
+   `/dev/disk/by-id/`.
+4. Verify the disk ID carefully. The install script destroys and repartitions
+   the selected disk.
 
-   ```bash
-   ls -l /dev/disk/by-id/
-   ```
-
-6. Edit `hosts/desktop/disko.nix` and replace
-   `REPLACE_WITH_YOUR_DISK_ID` with the correct whole-disk ID.
-7. Verify the target disk carefully. Disko's destroy mode erases it.
-
-## Partition and mount
-
-From the repository root:
+Inspect disk IDs with:
 
 ```bash
-sudo nix run github:nix-community/disko/latest -- \
-  --mode destroy,format,mount \
-  --flake .#desktop
-```
-
-Check the resulting mounts:
-
-```bash
-lsblk -f
-findmnt -R /mnt
+ls -l /dev/disk/by-id/
 ```
 
 ## Install
 
+From the repository root:
+
 ```bash
-sudo nixos-install --flake .#desktop
+chmod +x scripts/install.sh
+sudo ./scripts/install.sh desktop
 ```
 
-Reboot, remove the installer ISO, and boot from the virtual disk.
+The host argument selects the flake configuration. Additional hosts need
+entries in `flake.nix` and corresponding directories under `hosts/`.
 
-## Included layout
+The script asks for explicit confirmation before running Disko.
 
-- 1 GiB FAT32 EFI partition mounted at `/boot`
-- Remaining disk as Btrfs
+## Installed user
+
+The configured user is `arvid`. The initial password is `test`, retained
+from the earlier test configuration. Change it after installation:
+
+```bash
+passwd
+```
+
+The password is configured as a plaintext initial password for testing;
+do not use it as a long-term credential.
+
+## Git repository clone
+
+During system activation, the configuration attempts to clone
+`https://github.com/arvidkarlgren/nixos.git` into `/home/arvid/nixos` if
+that path does not already contain a Git repository. Git is also installed
+as a system package.
+
+## Remote desktop
+
+xrdp is enabled and TCP port 3389 is opened. xrdp normally creates a separate
+X11 session; it does not automatically share the active COSMIC Wayland
+session. A compatible X11 desktop/session setup may be needed for a complete
+remote graphical desktop.
+
+## Storage layout
+
+Disko creates a 1 GiB EFI system partition and a Btrfs partition containing:
+
 - `@` mounted at `/`
 - `@home` mounted at `/home`
 - `@nix` mounted at `/nix`
@@ -54,17 +70,4 @@ Reboot, remove the installer ISO, and boot from the virtual disk.
 - `@snapshots` mounted at `/.snapshots`
 - `@swap` mounted at `/.swapvol`
 
-The swap subvolume is empty; no swapfile is configured.
-
-## Test credentials
-
-- Username: `test`
-- Initial password: `test`
-
-This is an isolated VM test configuration. Change the password before using it for anything beyond testing. Passwordless sudo is enabled for convenience and should not be used on a production machine.
-
-## Notes
-
-- The configuration targets x86_64 UEFI systems.
-- The disk ID must be the whole-disk identifier, not a partition identifier.
-- `system.stateVersion` is set to `26.05`; adjust it if installing a different NixOS release.
+All Btrfs subvolumes share free space in the same filesystem.
