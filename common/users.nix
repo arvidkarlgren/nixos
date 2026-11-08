@@ -4,11 +4,7 @@
     isNormalUser = true;
     home = "/home/arvid";
     createHome = true;
-    extraGroups = [ "wheel" "networkmanager" "uinput" ];
-    # Temporary testing password. Replace with a SOPS-managed hash.
-    initialPassword = "test";
+    extraGroups = [ "wheel" ];
+    hashedPasswordFile = "/var/lib/nixos/arvid-password";
   };
-
-  # Testing convenience only; review before daily use.
-  security.sudo.wheelNeedsPassword = false;
 }

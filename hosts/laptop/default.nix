@@ -1,10 +1,9 @@
 {
   imports = [
-    ../../common
-    ./hardware.nix
     ./disko.nix
-    ./configuration.nix
+    ./hardware.nix
   ];
-  networking.hostName = "laptop";
+
+  networking.hostName = "t14s-nix";
   system.stateVersion = "26.05";
 }

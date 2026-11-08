@@ -23,15 +23,39 @@
           name = "root";
           size = "100%";
           content = {
-            type = "btrfs";
-            extraArgs = [ "-f" ];
-            subvolumes = {
-              "/@" = { mountpoint = "/"; mountOptions = [ "compress=zstd" "noatime" ]; };
-              "/@home" = { mountpoint = "/home"; mountOptions = [ "compress=zstd" "noatime" ]; };
-              "/@nix" = { mountpoint = "/nix"; mountOptions = [ "compress=zstd" "noatime" ]; };
-              "/@log" = { mountpoint = "/var/log"; mountOptions = [ "compress=zstd" "noatime" ]; };
-              "/@snapshots" = { mountpoint = "/.snapshots"; mountOptions = [ "compress=zstd" "noatime" ]; };
-              "/@swap" = { mountpoint = "/.swapvol"; mountOptions = [ "noatime" ]; };
+            type = "luks";
+            name = "cryptroot";
+            askPassword = true;
+            content = {
+              type = "btrfs";
+              extraArgs = [ "-f" ];
+              subvolumes = {
+                "/@" = {
+                  mountpoint = "/";
+                  mountOptions = [ "compress=zstd" "noatime" ];
+                };
+                "/@home" = {
+                  mountpoint = "/home";
+                  mountOptions = [ "compress=zstd" "noatime" ];
+                };
+                "/@nix" = {
+                  mountpoint = "/nix";
+                  mountOptions = [ "compress=zstd" "noatime" ];
+                };
+                "/@log" = {
+                  mountpoint = "/var/log";
+                  mountOptions = [ "compress=zstd" "noatime" ];
+                };
+                "/@snapshots" = {
+                  mountpoint = "/.snapshots";
+                  mountOptions = [ "compress=zstd" "noatime" ];
+                };
+                "/@swap" = {
+                  mountpoint = "/.swapvol";
+                  mountOptions = [ "noatime" ];
+                  swap.swapfile.size = "16G";
+                };
+              };
             };
           };
         };
