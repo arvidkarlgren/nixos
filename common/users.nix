@@ -1,10 +1,10 @@
-{ ... }:
+{ config, ... }:
 {
   users.users.arvid = {
     isNormalUser = true;
     home = "/home/arvid";
     createHome = true;
     extraGroups = [ "wheel" ];
-    hashedPasswordFile = "/var/lib/nixos/arvid-password";
+    hashedPasswordFile = config.sops.secrets."passwords/arvid".path;
   };
 }

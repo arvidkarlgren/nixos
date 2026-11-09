@@ -36,4 +36,18 @@
 
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
+
+  sops.defaultSopsFile = ../secrets/common.yaml;
+  sops.age.keyFile = "/var/lib/sops-nix/key.txt";
+  sops.secrets."passwords/arvid".neededForUsers = true;
+  sops.secrets."ssh/arvid" = {
+    path = "/home/arvid/.ssh/id_ed25519";
+    owner = "arvid";
+    group = "users";
+    mode = "0600";
+  };
+
+  systemd.tmpfiles.rules = [
+    "d /home/arvid/.ssh 0700 arvid users -"
+  ];
 }
