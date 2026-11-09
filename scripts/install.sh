@@ -273,6 +273,7 @@ else
     'explode(.) | (.creation_rules[] | select(.path_regex == strenv(SOPS_RULE_REGEX))) |= (.age = (((.age // "" | split(",") | map(select(. != ""))) + [strenv(PERSONAL_AGE_PUBLIC), strenv(MACHINE_AGE_PUBLIC)] | unique | join(","))))' \
     "$REPO_DIR/.sops.yaml"
 fi
+run_tool yq -i 'explode(.)' "$REPO_DIR/.sops.yaml"
 
 (
   cd "$REPO_DIR"
