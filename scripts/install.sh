@@ -209,13 +209,17 @@ RULE_COUNT="$(run_tool yq -r \
   '[.creation_rules[]? | select(.path_regex == strenv(SOPS_RULE_REGEX))] | length' \
   "$REPO_DIR/.sops.yaml")"
 [[ "$RULE_COUNT" =~ ^[0-9]+$ ]] || die "Could not parse .sops.yaml creation rules."
-if [[ "$RULE_COUNT" == 0 ]]; then
-  run_tool yq -i \
-    '.creation_rules = (.creation_rules // []) | .creation_rules += [{"path_regex": strenv(SOPS_RULE_REGEX), "age": ""}]' \
-    "$REPO_DIR/.sops.yaml"
-elif [[ "$RULE_COUNT" != 1 ]]; then
+[[ "$RULE_COUNT" == 1 ]] ||
   die "Expected exactly one .sops.yaml rule for $SOPS_RULE_REGEX; found $RULE_COUNT."
-fi
+KEY_GROUP_COUNT="$(run_tool yq -r \
+  '[.creation_rules[] | select(.path_regex == strenv(SOPS_RULE_REGEX)) | .key_groups[]?] | length' \
+  "$REPO_DIR/.sops.yaml")"
+[[ "$KEY_GROUP_COUNT" == 1 ]] ||
+  die "Expected one age key group for $SOPS_RULE_REGEX; found $KEY_GROUP_COUNT."
+HOST_KEY_COUNT="$(HOST="$HOST" run_tool yq -r \
+  '[.keys[]? | select(anchor == strenv(HOST))] | length' "$REPO_DIR/.sops.yaml")"
+[[ "$HOST_KEY_COUNT" == 0 ]] ||
+  die "The .sops.yaml already has a key named '$HOST'; refusing to overwrite its identity."
 
 MACHINE_KEY=/mnt/var/lib/sops-nix/key.txt
 
@@ -261,19 +265,17 @@ MACHINE_AGE_PUBLIC="$(run_tool age-keygen -y "$MACHINE_KEY")" ||
   die "Generated machine age key is not a valid post-quantum recipient."
 export MACHINE_AGE_PUBLIC
 
-HAS_KEY_GROUPS="$(run_tool yq -r \
-  '.creation_rules[] | select(.path_regex == strenv(SOPS_RULE_REGEX)) | has("key_groups")' \
+HOST="$HOST" run_tool yq -i \
+  '.keys += [strenv(MACHINE_AGE_PUBLIC)] | (.keys[-1] anchor = strenv(HOST))' \
+  "$REPO_DIR/.sops.yaml"
+HOST="$HOST" run_tool yq -i \
+  '(.creation_rules[] | select(.path_regex == strenv(SOPS_RULE_REGEX)) | .key_groups[0].age) += [(.keys[] | select(anchor == strenv(HOST)) | alias = strenv(HOST))]' \
+  "$REPO_DIR/.sops.yaml"
+HOST_ALIAS_COUNT="$(HOST="$HOST" run_tool yq -r \
+  '[.creation_rules[] | select(.path_regex == strenv(SOPS_RULE_REGEX)) | .key_groups[0].age[] | select(alias == strenv(HOST))] | length' \
   "$REPO_DIR/.sops.yaml")"
-if [[ "$HAS_KEY_GROUPS" == true ]]; then
-  run_tool yq -i \
-    '(.creation_rules[] | select(.path_regex == strenv(SOPS_RULE_REGEX)) | .key_groups[]) |= (.age = ((.age // []) + [strenv(PERSONAL_AGE_PUBLIC), strenv(MACHINE_AGE_PUBLIC)] | unique))' \
-    "$REPO_DIR/.sops.yaml"
-else
-  run_tool yq -i \
-    'explode(.) | (.creation_rules[] | select(.path_regex == strenv(SOPS_RULE_REGEX))) |= (.age = (((.age // "" | split(",") | map(select(. != ""))) + [strenv(PERSONAL_AGE_PUBLIC), strenv(MACHINE_AGE_PUBLIC)] | unique | join(","))))' \
-    "$REPO_DIR/.sops.yaml"
-fi
-run_tool yq -i 'explode(.)' "$REPO_DIR/.sops.yaml"
+[[ "$HOST_ALIAS_COUNT" == 1 ]] ||
+  die "Could not add exactly one '$HOST' alias to the SOPS recipient group."
 
 (
   cd "$REPO_DIR"
