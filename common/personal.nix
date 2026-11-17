@@ -1,6 +1,9 @@
 { config, pkgs, ... }:
 {
-  imports = [ ../modules/kde.nix ];
+  imports = [
+    ../modules/kde.nix
+    ../modules/windows-remote.nix
+  ];
 
   services.tailscale.enable = true;
 
