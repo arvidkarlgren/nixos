@@ -43,6 +43,14 @@
           ./hosts/laptop/default.nix
         ];
       };
+
+      voron = nixpkgs.lib.nixosSystem {
+        system = "aarch64-linux";
+        modules = [
+          sops-nix.nixosModules.sops
+          ./hosts/voron/default.nix
+        ];
+      };
     };
   };
 }
