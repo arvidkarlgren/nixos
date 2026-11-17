@@ -2,7 +2,6 @@
 {
   imports = [ ../modules/kde.nix ];
 
-  services.flatpak.enable = true;
   services.tailscale.enable = true;
 
   fileSystems."/mnt/files" = {
@@ -25,16 +24,13 @@
     ];
   };
 
-  system.activationScripts.installVSCodeFlatpak = ''
-    ${pkgs.flatpak}/bin/flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    if ! ${pkgs.flatpak}/bin/flatpak info --system com.visualstudio.code >/dev/null 2>&1; then
-      ${pkgs.flatpak}/bin/flatpak install --system --noninteractive flathub com.visualstudio.code
-    fi
-  '';
-
   environment.systemPackages = with pkgs; [
+    alacritty
     cifs-utils
     firefox
+    signal-desktop
+    sops
+    vscode
   ];
 
   users.users.arvid = {

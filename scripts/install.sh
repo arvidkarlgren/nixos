@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if (( EUID != 0 )); then
+  printf 'Run this installer with sudo: sudo %s HOST DISK\n' "$0" >&2
+  exit 1
+fi
+
 # Require the host name and target disk.
 if (( $# != 2 )); then
   printf 'Usage: %s HOST DISK\n' "$0" >&2
@@ -12,7 +17,8 @@ DISK="$2"
 REPO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 DISKO_CONFIG="$REPO_DIR/hosts/$HOST/disko.nix"
 HOST_SECRETS="$REPO_DIR/secrets/hosts/$HOST.yaml"
-PERSONAL_KEY=/root/age.key
+PERSONAL_SECRETS="$REPO_DIR/secrets/personal.yaml"
+PERSONAL_KEY=/home/nixos/keys.txt
 NIXPKGS_REF="github:NixOS/nixpkgs/nixos-26.05"
 BOOTSTRAP_PACKAGES=(
   "$NIXPKGS_REF#age"
@@ -38,11 +44,25 @@ if [[ ! -f "$HOST_SECRETS" ]]; then
   exit 1
 fi
 
+if [[ ! -f "$PERSONAL_SECRETS" ]]; then
+  printf 'Personal secrets file not found at %s.\n' "$PERSONAL_SECRETS" >&2
+  exit 1
+fi
+
 # Run age and SOPS from the pinned Nixpkgs tools.
 run_tool() {
   nix --extra-experimental-features "nix-command flakes" shell \
     "${BOOTSTRAP_PACKAGES[@]}" --command "$@"
 }
+
+# Read the commit email before any destructive disk operations.
+GIT_EMAIL="$(SOPS_AGE_KEY_FILE="$PERSONAL_KEY" run_tool sops decrypt \
+  --extract '["git"]["email"]' "$PERSONAL_SECRETS")"
+if [[ -z "$GIT_EMAIL" || "$GIT_EMAIL" == *$'\n'* || "$GIT_EMAIL" == *$'\r'* ]]; then
+  printf 'The encrypted git.email value in %s must be a non-empty single line.\n' \
+    "$PERSONAL_SECRETS" >&2
+  exit 1
+fi
 
 # Collect the disk-encryption passphrase when this host uses LUKS.
 if grep -q 'type = "luks";' "$DISKO_CONFIG"; then
@@ -155,6 +175,8 @@ if [[ -e "$TARGET_REPO" ]]; then
 fi
 cp -a "$REPO_DIR" "$TARGET_REPO"
 git -C "$TARGET_REPO" -c "safe.directory=$TARGET_REPO" remote set-url origin "$SSH_ORIGIN"
+git -C "$TARGET_REPO" -c "safe.directory=$TARGET_REPO" config --local user.name "Arvid Karlgren"
+git -C "$TARGET_REPO" -c "safe.directory=$TARGET_REPO" config --local user.email "$GIT_EMAIL"
 nixos-install --root /mnt --flake "$FINAL_STAGE#$HOST" --no-root-passwd
 nixos-enter --root /mnt -- chown -R arvid:users /home/arvid
 

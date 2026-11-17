@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs-personal.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     disko = {
       url = "github:nix-community/disko/latest";
@@ -14,30 +15,51 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    home-manager-personal = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs-personal";
+    };
+
+    plasma-manager = {
+      url = "github:nix-community/plasma-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
+
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { nixpkgs, disko, home-manager, sops-nix, ... }: {
+  outputs = { nixpkgs, nixpkgs-personal, disko, home-manager-personal, plasma-manager, sops-nix, ... }: {
     nixosConfigurations = {
-      desktop = nixpkgs.lib.nixosSystem {
+      desktop = nixpkgs-personal.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
           disko.nixosModules.disko
-          home-manager.nixosModules.home-manager
+          home-manager-personal.nixosModules.home-manager
+          {
+            home-manager.sharedModules = [
+              plasma-manager.homeModules.plasma-manager
+            ];
+          }
           sops-nix.nixosModules.sops
           ./common/default.nix
           ./hosts/desktop/default.nix
         ];
       };
 
-      laptop = nixpkgs.lib.nixosSystem {
+      laptop = nixpkgs-personal.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
           disko.nixosModules.disko
-          home-manager.nixosModules.home-manager
+          home-manager-personal.nixosModules.home-manager
+          {
+            home-manager.sharedModules = [
+              plasma-manager.homeModules.plasma-manager
+            ];
+          }
           sops-nix.nixosModules.sops
           ./common/default.nix
           ./hosts/laptop/default.nix

@@ -9,6 +9,8 @@
   networking.hostName = "voron";
   networking.networkmanager.enable = true;
 
+  environment.shellAliases.rebuild = "sudo nixos-rebuild switch --flake /home/arvid/nixos#voron";
+
   users.users.arvid = {
     isNormalUser = true;
     home = "/home/arvid";
