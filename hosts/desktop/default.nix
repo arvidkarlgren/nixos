@@ -8,6 +8,12 @@
 
   networking.hostName = "t1-nix";
 
+  fileSystems."/home/arvid/games" = {
+    device = "/dev/disk/by-uuid/6a87ec41-e917-4ba0-8658-6145d294ce06";
+    fsType = "btrfs";
+    options = [ "subvol=games" ];
+  };
+
   environment.shellAliases.rebuild = "sudo nixos-rebuild switch --flake /home/arvid/nixos#desktop";
   environment.shellAliases.displays = "/home/arvid/nixos/scripts/displays.sh";
 

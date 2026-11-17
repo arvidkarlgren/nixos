@@ -113,6 +113,13 @@
         };
 
         configFile."kwinrc".Windows.PerOutputVirtualDesktops = true;
+        configFile."kwinrc".EdgeBarrier.EdgeBarrier = 0;
+        configFile."kwinrc".ElectricBorders = {
+          TopLeft = "None";
+          TopRight = "None";
+          BottomLeft = "None";
+          BottomRight = "None";
+        };
         configFile."kwinrc".Plugins."move-and-followEnabled" = true;
 
         configFile."plasma-localerc".Formats = {
