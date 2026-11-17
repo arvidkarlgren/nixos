@@ -14,6 +14,8 @@
     options = [ "subvol=games" ];
   };
 
+  hardware.xone.enable = true;
+
   environment.shellAliases.rebuild = "sudo nixos-rebuild switch --flake /home/arvid/nixos#desktop";
   environment.shellAliases.displays = "/home/arvid/nixos/scripts/displays.sh";
 

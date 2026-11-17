@@ -30,6 +30,7 @@
     firefox
     signal-desktop
     sops
+    spotify
     vscode
   ];
 

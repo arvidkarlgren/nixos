@@ -7,6 +7,7 @@
   config.services.displayManager.sddm.enable = true;
   config.hardware.graphics.enable = true;
   config.hardware.graphics.enable32Bit = true;
+  config.hardware.bluetooth.enable = true;
   config.environment.plasma6.excludePackages = [ pkgs.kdePackages.konsole ];
 
   config.home-manager.users.arvid =
@@ -56,6 +57,8 @@
         workspace = {
           colorScheme = "BreezeDark";
           lookAndFeel = "org.kde.breezedark.desktop";
+          wallpaper = "${../wallpapers/unsplash-1Z2niiBPg5A.jpg}";
+          wallpaperFillMode = "preserveAspectCrop";
         };
 
         shortcuts = {
@@ -126,6 +129,9 @@
           LANG = "en_SE.UTF-8";
           LC_TIME = "en_SE.UTF-8";
         };
+
+        configFile."kdeglobals".Sounds.Enable = false;
+        configFile."plasmaparc".General.AudioFeedback = false;
 
         configFile."kdeglobals".General = {
           TerminalApplication = "alacritty";
