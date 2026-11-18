@@ -75,7 +75,7 @@ in
           wallpaperFillMode = "preserveAspectCrop";
         };
 
-        kscreenlocker.appearance.wallpaper = wallpaper;
+        kscreenlocker.appearance.wallpaper = "${wallpaper}";
 
         session.sessionRestore.restoreOpenApplicationsOnLogin = "startWithEmptySession";
 
