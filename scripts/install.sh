@@ -79,6 +79,8 @@ if [[ ! -b "$DISK" || "$(lsblk -dnro TYPE "$DISK")" != disk ]]; then
   exit 1
 fi
 
+printf 'Target disk manufacturer and model:\n'
+lsblk -d -o PATH,SIZE,VENDOR,MODEL "$DISK"
 printf 'Partitions and filesystem types on %s:\n' "$DISK"
 lsblk -o NAME,PATH,SIZE,TYPE,FSTYPE,LABEL "$DISK"
 printf 'WARNING: Disko will destroy all data on %s.\n' "$DISK"

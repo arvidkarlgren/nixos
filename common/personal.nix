@@ -1,11 +1,60 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 {
   imports = [
+    ../modules/firefox.nix
     ../modules/kde.nix
     ../modules/windows-remote.nix
   ];
 
-  services.tailscale.enable = true;
+  services.tailscale = {
+    enable = true;
+    useRoutingFeatures = "client";
+    authKeyFile = config.sops.secrets."tailscale/oauth".path;
+    extraUpFlags = [
+      "--advertise-tags=tag:personal"
+      "--accept-routes"
+      "--accept-dns"
+      "--operator=arvid"
+    ];
+    extraSetFlags = [
+      "--accept-routes"
+      "--accept-dns"
+      "--operator=arvid"
+    ];
+  };
+
+  systemd.services.tailscaled-autoconnect = {
+    serviceConfig = {
+      RuntimeDirectory = "tailscale-auth";
+      RuntimeDirectoryMode = "0700";
+    };
+    script = lib.mkForce ''
+      set -euo pipefail
+      key_file="$RUNTIME_DIRECTORY/auth-key"
+      trap 'rm -f "$key_file"' EXIT
+
+      while true; do
+        state="$(tailscale status --json --peers=false | jq -r '.BackendState')"
+        case "$state" in
+          NeedsLogin|NeedsMachineAuth|Stopped)
+            # Keep the OAuth secret out of the command line and use a persistent node.
+            umask 077
+            printf '%s?ephemeral=false' "$(cat ${config.sops.secrets."tailscale/oauth".path})" > "$key_file"
+            tailscale up --auth-key="file:$key_file" ${lib.escapeShellArgs config.services.tailscale.extraUpFlags}
+            rm -f "$key_file"
+            ;;
+          Running)
+            systemd-notify --ready
+            exit 0
+            ;;
+          *)
+            echo "Waiting for Tailscale: $state"
+            ;;
+        esac
+        sleep 1
+      done
+    '';
+  };
 
   fileSystems."/mnt/files" = {
     device = "//nas1.kv.internal/files";
@@ -30,7 +79,6 @@
   environment.systemPackages = with pkgs; [
     alacritty
     cifs-utils
-    firefox
     signal-desktop
     sops
     spotify
@@ -51,6 +99,11 @@
   users.users.arvid.hashedPasswordFile = config.sops.secrets."passwords/arvid".path;
 
   sops.secrets."smb/credentials" = {
+    sopsFile = ../secrets/personal.yaml;
+    mode = "0400";
+  };
+
+  sops.secrets."tailscale/oauth" = {
     sopsFile = ../secrets/personal.yaml;
     mode = "0400";
   };

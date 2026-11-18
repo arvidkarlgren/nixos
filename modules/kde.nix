@@ -1,10 +1,24 @@
 { config, lib, pkgs, ... }:
+let
+  wallpaper = ../wallpapers/tyler-lastovich-ddLiNMqWAOM-unsplash.jpg;
+in
 {
   options.personal.kde.displaySwitchHotkeys.enable =
     lib.mkEnableOption "desktop display switching shortcuts";
 
   config.services.desktopManager.plasma6.enable = true;
   config.services.displayManager.sddm.enable = true;
+  config.services.displayManager.sddm.theme = "breeze";
+  config.environment.systemPackages = [
+    (pkgs.writeTextDir "share/sddm/themes/breeze/theme.conf.user" ''
+      [General]
+      background=${wallpaper}
+    '')
+  ];
+  config.systemd.tmpfiles.rules = [
+    "d /var/lib/sddm/.config 0755 sddm sddm -"
+    "L+ /var/lib/sddm/.config/kdeglobals - - - - ${pkgs.kdePackages.breeze}/share/color-schemes/BreezeDark.colors"
+  ];
   config.hardware.graphics.enable = true;
   config.hardware.graphics.enable32Bit = true;
   config.hardware.bluetooth.enable = true;
@@ -57,9 +71,32 @@
         workspace = {
           colorScheme = "BreezeDark";
           lookAndFeel = "org.kde.breezedark.desktop";
-          wallpaper = "${../wallpapers/unsplash-1Z2niiBPg5A.jpg}";
+          wallpaper = "${wallpaper}";
           wallpaperFillMode = "preserveAspectCrop";
         };
+
+        session.sessionRestore.restoreOpenApplicationsOnLogin = "startWithEmptySession";
+
+        panels = [
+          {
+            height = 36;
+            floating = true;
+            widgets = [
+              { kickoff.icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake-white.svg"; }
+              { iconTasks.launchers = [ ]; }
+              "org.kde.plasma.marginsseparator"
+              {
+                systemTray.items.hidden = [
+                  "org.kde.merkuro.contact.applet"
+                  "org.kde.plasma.clipboard"
+                  "org.kde.plasma.brightness"
+                ];
+              }
+              { digitalClock.date.enable = false; }
+              "org.kde.plasma.showdesktop"
+            ];
+          }
+        ];
 
         shortcuts = {
           kwin = (builtins.listToAttrs (
@@ -131,6 +168,7 @@
         };
 
         configFile."kdeglobals".Sounds.Enable = false;
+        configFile."kdeglobals".KDE.AnimationDurationFactor = 0.5;
         configFile."plasmaparc".General.AudioFeedback = false;
 
         configFile."kdeglobals".General = {
