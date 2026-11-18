@@ -75,6 +75,8 @@ in
           wallpaperFillMode = "preserveAspectCrop";
         };
 
+        kscreenlocker.appearance.wallpaper = wallpaper;
+
         session.sessionRestore.restoreOpenApplicationsOnLogin = "startWithEmptySession";
 
         panels = [
@@ -152,6 +154,7 @@ in
           };
         };
 
+        configFile."kwinrc".Desktops.Number = 10;
         configFile."kwinrc".Windows.PerOutputVirtualDesktops = true;
         configFile."kwinrc".EdgeBarrier.EdgeBarrier = 0;
         configFile."kwinrc".ElectricBorders = {

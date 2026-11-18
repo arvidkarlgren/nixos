@@ -1,0 +1,112 @@
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+
+logo_image = Image("logo.png");
+logo_sprite = Sprite(logo_image);
+bar_image = Image("progress.png");
+bar_background = Sprite(bar_image);
+bar_background.SetOpacity(0.25);
+bar_progress = Sprite();
+bar_progress.SetZ(1);
+message_sprite = Sprite();
+prompt_sprite = Sprite();
+entry_sprite = Sprite();
+message_image = 0;
+prompt_image = 0;
+entry_image = 0;
+showing_prompt = 0;
+current_progress = 0;
+
+fun layout() {
+    center_x = Window.GetX() + Window.GetWidth() / 2;
+    center_y = Window.GetY() + Window.GetHeight() / 2;
+    logo_sprite.SetX(center_x - logo_image.GetWidth() / 2);
+    logo_sprite.SetY(center_y - logo_image.GetHeight() / 2);
+    bar_background.SetX(center_x - bar_image.GetWidth() / 2);
+    bar_background.SetY(center_y + logo_image.GetHeight() / 2 + 32);
+    bar_progress.SetX(bar_background.GetX());
+    bar_progress.SetY(bar_background.GetY());
+    if (message_image) {
+        message_sprite.SetX(center_x - message_image.GetWidth() / 2);
+        message_sprite.SetY(Window.GetY() + Window.GetHeight() - 50);
+    }
+    if (prompt_image) {
+        prompt_sprite.SetX(center_x - prompt_image.GetWidth() / 2);
+        prompt_sprite.SetY(center_y + logo_image.GetHeight() / 2 + 32);
+    }
+    if (entry_image) {
+        entry_sprite.SetX(center_x - entry_image.GetWidth() / 2);
+        entry_sprite.SetY(center_y + logo_image.GetHeight() / 2 + 60);
+    }
+}
+
+fun progress_callback(duration, progress) {
+    current_progress = progress;
+    if (progress > 1)
+        progress = 1;
+    if (progress <= 0 || showing_prompt) {
+        bar_progress.SetOpacity(0);
+    } else {
+        width = Math.Int(bar_image.GetWidth() * progress);
+        if (width < 1)
+            width = 1;
+        bar_progress.SetImage(bar_image.Scale(width, bar_image.GetHeight()));
+        bar_progress.SetOpacity(1);
+    }
+}
+
+fun message_callback(text) {
+    message_image = Image.Text(text, 1, 1, 1);
+    message_sprite.SetImage(message_image);
+    message_sprite.SetOpacity(1);
+    layout();
+}
+
+fun hide_message_callback(text) {
+    message_image = 0;
+    message_sprite.SetOpacity(0);
+}
+
+fun show_prompt(prompt, entry) {
+    showing_prompt = 1;
+    bar_background.SetOpacity(0);
+    bar_progress.SetOpacity(0);
+    prompt_image = Image.Text(prompt, 1, 1, 1);
+    prompt_sprite.SetImage(prompt_image);
+    prompt_sprite.SetOpacity(1);
+    if (entry != "") {
+        entry_image = Image.Text(entry, 1, 1, 1);
+        entry_sprite.SetImage(entry_image);
+        entry_sprite.SetOpacity(1);
+    } else {
+        entry_image = 0;
+        entry_sprite.SetOpacity(0);
+    }
+    layout();
+}
+
+fun password_callback(prompt, bullets) {
+    entry = "";
+    for (i = 0; i < bullets; i++)
+        entry = entry + "*";
+    show_prompt(prompt, entry);
+}
+
+fun normal_callback() {
+    showing_prompt = 0;
+    prompt_image = 0;
+    entry_image = 0;
+    prompt_sprite.SetOpacity(0);
+    entry_sprite.SetOpacity(0);
+    bar_background.SetOpacity(0.25);
+    progress_callback(0, current_progress);
+}
+
+Plymouth.SetRefreshFunction(layout);
+Plymouth.SetBootProgressFunction(progress_callback);
+Plymouth.SetDisplayMessageFunction(message_callback);
+Plymouth.SetHideMessageFunction(hide_message_callback);
+Plymouth.SetDisplayPasswordFunction(password_callback);
+Plymouth.SetDisplayQuestionFunction(show_prompt);
+Plymouth.SetDisplayNormalFunction(normal_callback);
+layout();

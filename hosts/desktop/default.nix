@@ -8,6 +8,8 @@
 
   networking.hostName = "t1-nix";
 
+  boot.initrd.kernelModules = [ "amdgpu" ];
+
   fileSystems."/home/arvid/games" = {
     device = "/dev/disk/by-uuid/6a87ec41-e917-4ba0-8658-6145d294ce06";
     fsType = "btrfs";
@@ -15,6 +17,10 @@
   };
 
   hardware.xone.enable = true;
+
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="046d", ATTR{idProduct}=="c547", TEST=="power/wakeup", ATTR{power/wakeup}="disabled"
+  '';
 
   environment.shellAliases.rebuild = "sudo nixos-rebuild switch --flake /home/arvid/nixos#desktop";
   environment.shellAliases.displays = "/home/arvid/nixos/scripts/displays.sh";

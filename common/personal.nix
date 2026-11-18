@@ -3,7 +3,15 @@
   imports = [
     ../modules/firefox.nix
     ../modules/kde.nix
+    ../modules/plymouth.nix
     ../modules/windows-remote.nix
+  ];
+
+  boot.consoleLogLevel = 3;
+  boot.kernelParams = [
+    "quiet"
+    "rd.udev.log_level=3"
+    "rd.systemd.show_status=auto"
   ];
 
   services.tailscale = {
