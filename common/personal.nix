@@ -14,6 +14,8 @@
     "rd.systemd.show_status=auto"
   ];
 
+  virtualisation.docker.enable = true;
+
   services.tailscale = {
     enable = true;
     useRoutingFeatures = "client";
@@ -86,10 +88,25 @@
 
   environment.systemPackages = with pkgs; [
     alacritty
+    audacity_3
+    blender
     cifs-utils
+    freecad
+    gdu
+    libreoffice-qt6
+    orca-slicer
     signal-desktop
     sops
     spotify
+    (if lib.versionOlder trilium-desktop.version "0.107.0" then
+      (trilium-desktop.override { electron_44 = electron_45; }).overrideAttrs (_: {
+        version = "0.107.0";
+        src = fetchurl {
+          url = "https://github.com/TriliumNext/Trilium/releases/download/v0.107.0/TriliumNotes-v0.107.0-linux-x64.zip";
+          hash = "sha256-pv6WquROAy8YJFLC7zmm/VZGIVO/FRvQu6ezvgaTebo=";
+        };
+      })
+    else trilium-desktop)
     vscode
   ];
 
@@ -97,7 +114,7 @@
     isNormalUser = true;
     home = "/home/arvid";
     createHome = true;
-    extraGroups = [ "wheel" ];
+    extraGroups = [ "wheel" "docker" ];
   };
 
   sops.secrets."passwords/arvid" = {

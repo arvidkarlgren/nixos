@@ -25,7 +25,7 @@ case "$1" in
       output.HDMI-A-1.disable
     ;;
   tv)
-    exec kscreen-doctor \
+    kscreen-doctor \
       output.HDMI-A-1.enable \
       output.HDMI-A-1.mode.3840x2160@60 \
       output.HDMI-A-1.rotation.none \
@@ -34,6 +34,7 @@ case "$1" in
       output.HDMI-A-1.primary \
       output.DP-1.disable \
       output.DP-2.disable
+    exec sound-output hdmi alsa_card.pci-0000_08_00.1 "LG TV"
     ;;
   *)
     printf 'Unknown display mode: %s\nUsage: %s {desk|tv}\n' "$1" "$0" >&2

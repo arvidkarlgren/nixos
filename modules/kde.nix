@@ -1,6 +1,11 @@
 { config, lib, pkgs, ... }:
 let
   wallpaper = ../wallpapers/tyler-lastovich-ddLiNMqWAOM-unsplash.jpg;
+  soundOutput = pkgs.writeShellApplication {
+    name = "sound-output";
+    runtimeInputs = [ pkgs.coreutils pkgs.jq pkgs.libnotify pkgs.pulseaudio ];
+    text = builtins.readFile ../scripts/sound-output.sh;
+  };
 in
 {
   options.personal.kde.displaySwitchHotkeys.enable =
@@ -10,6 +15,7 @@ in
   config.services.displayManager.sddm.enable = true;
   config.services.displayManager.sddm.theme = "breeze";
   config.environment.systemPackages = [
+    soundOutput
     (pkgs.writeTextDir "share/sddm/themes/breeze/theme.conf.user" ''
       [General]
       background=${wallpaper}
@@ -22,7 +28,10 @@ in
   config.hardware.graphics.enable = true;
   config.hardware.graphics.enable32Bit = true;
   config.hardware.bluetooth.enable = true;
-  config.environment.plasma6.excludePackages = [ pkgs.kdePackages.konsole ];
+  config.environment.plasma6.excludePackages = [
+    pkgs.kdePackages.discover
+    pkgs.kdePackages.konsole
+  ];
 
   config.home-manager.users.arvid =
     { lib, ... }:
@@ -136,12 +145,25 @@ in
             "manage activities" = [ ];
           };
           org_kde_powerdevil.Sleep = [ "Sleep" "Meta+Esc" ];
+          org_kde_powerdevil.powerProfile = [ "Battery" ];
+          "firefox.desktop"."_launch" = "Meta+B";
           "org.kde.konsole.desktop"."_launch" = [ ];
           "Alacritty.desktop"."_launch" = "Meta+T";
           "org.kde.plasma-systemmonitor.desktop"."_launch" = [ ];
         };
 
-        hotkeys.commands = lib.mkIf config.personal.kde.displaySwitchHotkeys.enable {
+        hotkeys.commands = {
+          cycle-sound-output = {
+            name = "Cycle sound output";
+            key = "Meta+Space";
+            command = "${lib.getExe soundOutput} cycle";
+          };
+          cycle-sound-output-reverse = {
+            name = "Cycle sound output backwards";
+            key = "Meta+Shift+Space";
+            command = "${lib.getExe soundOutput} cycle-reverse";
+          };
+        } // lib.optionalAttrs config.personal.kde.displaySwitchHotkeys.enable {
           display-desk = {
             name = "Desk displays";
             key = "Meta+F1";
