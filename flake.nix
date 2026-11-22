@@ -32,7 +32,7 @@
     };
   };
 
-  outputs = { nixpkgs, nixpkgs-personal, disko, home-manager-personal, plasma-manager, sops-nix, ... }: {
+  outputs = { nixpkgs-personal, disko, home-manager-personal, plasma-manager, sops-nix, ... }: {
     nixosConfigurations = {
       desktop = nixpkgs-personal.lib.nixosSystem {
         system = "x86_64-linux";
@@ -66,13 +66,6 @@
         ];
       };
 
-      voron = nixpkgs.lib.nixosSystem {
-        system = "aarch64-linux";
-        modules = [
-          sops-nix.nixosModules.sops
-          ./hosts/voron/default.nix
-        ];
-      };
     };
   };
 }

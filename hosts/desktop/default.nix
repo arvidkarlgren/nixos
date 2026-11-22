@@ -7,6 +7,29 @@
     ../../modules/steam.nix
   ];
 
+  environment.systemPackages = [
+    pkgs.cemu
+    (pkgs.makeDesktopItem {
+      name = "info.cemu.Cemu";
+      desktopName = "Cemu";
+      genericName = "Wii U Emulator";
+      comment = "Play Wii U games";
+      exec = "${pkgs.lib.getExe pkgs.cemu}";
+      icon = "info.cemu.Cemu";
+      categories = [ "Game" "Emulator" ];
+    })
+    (pkgs.symlinkJoin {
+      name = "prismlauncher-configured";
+      paths = [ pkgs.prismlauncher ];
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      postBuild = ''
+        rm "$out/bin/prismlauncher"
+        makeWrapper ${pkgs.lib.getExe pkgs.prismlauncher} "$out/bin/prismlauncher" \
+          --add-flags "--dir /home/arvid/games/prismlauncher"
+      '';
+    })
+  ];
+
   networking.hostName = "t1-nix";
 
   boot.initrd.kernelModules = [ "amdgpu" ];

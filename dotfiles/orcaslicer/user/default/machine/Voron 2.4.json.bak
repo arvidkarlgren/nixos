@@ -1,0 +1,41 @@
+{
+    "change_filament_gcode": "T[next_extruder] PURGE_LENGTH=[flush_length]\n;FLUSH_START\n;EXTERNAL_PURGE {flush_length}\n;FLUSH_END",
+    "cooling_tube_length": "0",
+    "cooling_tube_retraction": "0",
+    "enable_filament_ramming": "0",
+    "extra_loading_move": "0",
+    "from": "User",
+    "inherits": "Voron 2.4 300 0.4 nozzle",
+    "is_custom_defined": "0",
+    "machine_load_filament_time": "40",
+    "machine_start_gcode": "M104 S0\nM140 S0\nPRINT_START EXTRUDER=[nozzle_temperature_initial_layer] BED=[bed_temperature_initial_layer_single] TOOL={initial_tool}",
+    "machine_unload_filament_time": "25",
+    "name": "Voron 2.4",
+    "parking_pos_retraction": "0",
+    "print_host": "voron.tg.internal",
+    "printable_height": "260",
+    "printer_settings_id": "Voron 2.4",
+    "purge_in_prime_tower": "0",
+    "retract_length_toolchange": [
+        "0"
+    ],
+    "retract_lift_above": [
+        "0.25"
+    ],
+    "retract_when_changing_layer": [
+        "0"
+    ],
+    "retraction_length": [
+        "0.5"
+    ],
+    "retraction_minimum_travel": [
+        "2"
+    ],
+    "version": "2.3.0.3",
+    "wipe": [
+        "0"
+    ],
+    "z_hop": [
+        "0.2"
+    ]
+}

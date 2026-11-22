@@ -7,6 +7,20 @@
     ../modules/windows-remote.nix
   ];
 
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+
+  i18n.defaultLocale = "en_SE.UTF-8";
+
+  home-manager.useGlobalPkgs = true;
+  home-manager.useUserPackages = true;
+  home-manager.backupFileExtension = "backup";
+
+  home-manager.users.arvid = { config, ... }: {
+    xdg.configFile."OrcaSlicer/user".source =
+      config.lib.file.mkOutOfStoreSymlink "/home/arvid/nixos/dotfiles/orcaslicer/user";
+  };
+
   boot.consoleLogLevel = 3;
   boot.kernelParams = [
     "quiet"
@@ -15,6 +29,22 @@
   ];
 
   virtualisation.docker.enable = true;
+
+  networking.networkmanager = {
+    enable = true;
+    ensureProfiles = {
+      environmentFiles = [ config.sops.secrets."wifi/networkmanager".path ];
+      profiles.Grannens_Wifi = import ../modules/wifi-profile.nix {
+        id = "Grannens_Wifi";
+        ssid = "$WIFI_SSID";
+        psk = "$WIFI_PSK";
+      };
+    };
+  };
+
+  systemd.services.NetworkManager-ensure-profiles.restartTriggers = [
+    config.sops.secrets."wifi/networkmanager".sopsFileHash
+  ];
 
   services.tailscale = {
     enable = true;
@@ -47,7 +77,6 @@
         state="$(tailscale status --json --peers=false | jq -r '.BackendState')"
         case "$state" in
           NeedsLogin|NeedsMachineAuth|Stopped)
-            # Keep the OAuth secret out of the command line and use a persistent node.
             umask 077
             printf '%s?ephemeral=false' "$(cat ${config.sops.secrets."tailscale/oauth".path})" > "$key_file"
             tailscale up --auth-key="file:$key_file" ${lib.escapeShellArgs config.services.tailscale.extraUpFlags}
@@ -91,8 +120,9 @@
     audacity_3
     blender
     cifs-utils
+    element-desktop
     freecad
-    gdu
+    freetube
     libreoffice-qt6
     orca-slicer
     signal-desktop
@@ -133,6 +163,11 @@
     mode = "0400";
   };
 
+  sops.secrets."wifi/networkmanager" = {
+    sopsFile = ../secrets/personal.yaml;
+    mode = "0400";
+  };
+
   sops.secrets."age/personal" = {
     sopsFile = ../secrets/personal.yaml;
     path = "/home/arvid/.config/sops/age/keys.txt";
@@ -144,5 +179,6 @@
   systemd.tmpfiles.rules = [
     "d /home/arvid/.config/sops/age 0700 arvid users -"
     "d /home/arvid/.ssh 0700 arvid users -"
+    "d /home/arvid/git - arvid users -"
   ];
 }

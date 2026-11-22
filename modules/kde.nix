@@ -92,6 +92,7 @@ in
           {
             height = 36;
             floating = true;
+            hiding = "normalpanel";
             widgets = [
               { kickoff.icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake-white.svg"; }
               { iconTasks.launchers = [ ]; }

@@ -1,0 +1,58 @@
+{
+    "compatible_printers": [
+        "Voron 2.4 300 0.4 nozzle"
+    ],
+    "compatible_prints": [
+        "0.2mm TPU"
+    ],
+    "default_filament_colour": [
+        "#C061CB"
+    ],
+    "enable_overhang_bridge_fan": [
+        "0"
+    ],
+    "fan_cooling_layer_time": [
+        "15"
+    ],
+    "fan_max_speed": [
+        "40"
+    ],
+    "fan_min_speed": [
+        "40"
+    ],
+    "filament_max_volumetric_speed": [
+        "5"
+    ],
+    "filament_retraction_length": [
+        "0.8"
+    ],
+    "filament_settings_id": [
+        "Polymaker TPU"
+    ],
+    "filament_vendor": [
+        "Polymaker"
+    ],
+    "filament_wipe": [
+        "0"
+    ],
+    "from": "User",
+    "hot_plate_temp": [
+        "60"
+    ],
+    "hot_plate_temp_initial_layer": [
+        "60"
+    ],
+    "inherits": "Generic TPU @System",
+    "is_custom_defined": "0",
+    "name": "Polymaker TPU",
+    "nozzle_temperature": [
+        "225"
+    ],
+    "nozzle_temperature_initial_layer": [
+        "225"
+    ],
+    "slow_down_layer_time": [
+        "10"
+    ],
+    "version": "2.3.0.3"
+}
