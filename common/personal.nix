@@ -19,6 +19,8 @@
   home-manager.users.arvid = { config, ... }: {
     xdg.configFile."OrcaSlicer/user".source =
       config.lib.file.mkOutOfStoreSymlink "/home/arvid/nixos/dotfiles/orcaslicer/user";
+
+    programs.plasma.shortcuts."org.kde.dolphin.desktop"."_launch" = "Meta+F";
   };
 
   boot.consoleLogLevel = 3;

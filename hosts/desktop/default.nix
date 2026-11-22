@@ -1,4 +1,17 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
+let
+  homeAssistantWebhook = pkgs.writeShellApplication {
+    name = "home-assistant-webhook";
+    runtimeInputs = [ pkgs.curl pkgs.libnotify ];
+    text = ''
+      if ! curl --config "$1" --proto '=https' --request POST --fail --silent \
+        --output /dev/null --max-time 10; then
+        notify-send --urgency=critical "Home Assistant" "Webhook request failed."
+        exit 1
+      fi
+    '';
+  };
+in
 {
   imports = [
     ./disko.nix
@@ -84,12 +97,40 @@
 
   personal.kde.displaySwitchHotkeys.enable = true;
 
-  sops.secrets."ssh/arvid" = {
+  sops.secrets = lib.genAttrs [
+    "home-assistant/home"
+    "home-assistant/page-up"
+    "home-assistant/page-down"
+  ] (_: {
     sopsFile = ../../secrets/hosts/desktop.yaml;
-    path = "/home/arvid/.ssh/id_ed25519";
     owner = "arvid";
-    group = "users";
-    mode = "0600";
+    mode = "0400";
+  }) // {
+    "ssh/arvid" = {
+      sopsFile = ../../secrets/hosts/desktop.yaml;
+      path = "/home/arvid/.ssh/id_ed25519";
+      owner = "arvid";
+      group = "users";
+      mode = "0600";
+    };
+  };
+
+  home-manager.users.arvid.programs.plasma.hotkeys.commands = {
+    home-assistant-home = {
+      name = "Home Assistant Home";
+      key = "Meta+Shift+Home";
+      command = "${lib.getExe homeAssistantWebhook} ${config.sops.secrets."home-assistant/home".path}";
+    };
+    home-assistant-page-up = {
+      name = "Home Assistant Page Up";
+      key = "Meta+Shift+PgUp";
+      command = "${lib.getExe homeAssistantWebhook} ${config.sops.secrets."home-assistant/page-up".path}";
+    };
+    home-assistant-page-down = {
+      name = "Home Assistant Page Down";
+      key = "Meta+Shift+PgDown";
+      command = "${lib.getExe homeAssistantWebhook} ${config.sops.secrets."home-assistant/page-down".path}";
+    };
   };
 
   system.stateVersion = "26.05";
