@@ -140,6 +140,7 @@
       })
     else trilium-desktop)
     vscode
+    xhost
   ];
 
   users.users.arvid = {
